@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"time"
 
 	"github.com/gdamore/tcell"
 )
@@ -30,22 +29,11 @@ func (game *Game) Update() {
 }
 
 func (game *Game) Draw() {
-	render := func () {
-		w, h := game.Screen.Size()
+	game.Screen.Clear()
+	game.DrawMap()
 
-		for i := 0; i < w; i++ {
-			for j := 0; j < h; j++ {
-				game.Screen.Clear()
-				game.Screen.SetContent(i, j, 'F', nil, game.Styles.Foreground)
-				game.Screen.Show()
-				time.Sleep(OneHz * time.Millisecond)
-			}
-		}
-	}
-
+	game.Screen.Show()
 	for {
-		render()
-		time.Sleep(OneHz * time.Millisecond)	
 	}
 }
 
