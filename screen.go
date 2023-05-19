@@ -49,10 +49,14 @@ func (game *Game) DrawMap() {
 	
 	// Draw lanes
 	roadWidth := endX1 - posX1
-
+	game.Props.BoundaryXStart = posX1;
 	for i := posX1+roadWidth/4; i < endX1-roadWidth/4; i += roadWidth/4 {
 		for j := 0; j < h; j++ {
 			game.Screen.SetContent(i, j, tcell.RuneVLine, nil, game.Styles.Foreground);
 		}
-	} 
+		game.Props.BoundaryXEnd = i
+	}
+	
+	game.Props.BoundaryYStart = 0
+	game.Props.BoundaryYEnd = h
 }

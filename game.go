@@ -6,9 +6,16 @@ import (
 	"github.com/gdamore/tcell"
 )
 
+type Props struct {
+	BoundaryXStart int
+	BoundaryXEnd int
+	BoundaryYStart int
+	BoundaryYEnd int
+}
 type Game struct {
 	Screen tcell.Screen
 	Styles Style
+	Props Props
 }
 
 const (
@@ -31,10 +38,7 @@ func (game *Game) Update() {
 func (game *Game) Draw() {
 	game.Screen.Clear()
 	game.DrawMap()
-
 	game.Screen.Show()
-	for {
-	}
 }
 
 func (game *Game) New() {
