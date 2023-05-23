@@ -12,10 +12,21 @@ type Props struct {
 	BoundaryYStart int
 	BoundaryYEnd int
 }
+
+type Lane struct {
+	StartX int
+	EndX int
+}
+
+const (
+	LaneCount int = 4
+)
 type Game struct {
 	Screen tcell.Screen
 	Styles Style
 	Props Props
+	Car Car
+	Lanes [LaneCount]Lane
 }
 
 const (
@@ -30,6 +41,14 @@ func (game *Game) Update() {
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC {
 				game.End()
+			} else if ev.Key() == tcell.KeyRight && game.Car.Lane < LaneCount-1 {
+				game.ClearCarPos()
+				game.UpdateCarPos(game.Car.Lane+1)
+				game.DrawCar(game.Styles.Foreground)
+			} else if ev.Key() == tcell.KeyLeft && game.Car.Lane > 0 {
+				game.ClearCarPos()
+				game.UpdateCarPos(game.Car.Lane-1)
+				game.DrawCar(game.Styles.Foreground)
 			}		
 		}
 	}
@@ -38,7 +57,14 @@ func (game *Game) Update() {
 func (game *Game) Draw() {
 	game.Screen.Clear()
 	game.DrawMap()
-	game.Screen.Show()
+	game.InitCar()
+	
+	carStyle := game.Styles.Foreground
+	game.DrawCar(carStyle)
+	
+	for {
+		game.Screen.Show()
+	}
 }
 
 func (game *Game) New() {

@@ -8,7 +8,6 @@ import (
 
 func InitScreen() tcell.Screen {
 	screen, err := tcell.NewScreen()
-	
 	if err != nil {
 		log.Fatalf("%v", err)
 	}
@@ -48,15 +47,36 @@ func (game *Game) DrawMap() {
 	}
 	
 	// Draw lanes
-	roadWidth := endX1 - posX1
-	game.Props.BoundaryXStart = posX1;
-	for i := posX1+roadWidth/4; i < endX1-roadWidth/4; i += roadWidth/4 {
+	roadWidth := endX1-posX1
+	laneWidth := roadWidth/4
+	for i := posX1+laneWidth; i < endX1; i += laneWidth {
 		for j := 0; j < h; j++ {
 			game.Screen.SetContent(i, j, tcell.RuneVLine, nil, game.Styles.Foreground);
 		}
-		game.Props.BoundaryXEnd = i
 	}
-	
+
+	game.Props.BoundaryXStart = posX1 - 1
+	game.Props.BoundaryXEnd = endX1
 	game.Props.BoundaryYStart = 0
-	game.Props.BoundaryYEnd = h
+	game.Props.BoundaryYEnd = h - 1
+
+	laneW := (game.Props.BoundaryXEnd-game.Props.BoundaryXStart)/4
+	game.Lanes = [LaneCount]Lane{
+		{
+			StartX: game.Props.BoundaryXStart+2,
+			EndX: game.Props.BoundaryXStart+laneW+1,
+		},
+		{
+			StartX: game.Props.BoundaryXStart+laneW+2,
+			EndX: game.Props.BoundaryXStart+laneW*2+1,
+		},
+		{
+			StartX: game.Props.BoundaryXStart+laneW*2+2,
+			EndX: game.Props.BoundaryXStart+laneW*3+1,
+		},
+		{
+			StartX: game.Props.BoundaryXStart+laneW*3+2,
+			EndX: game.Props.BoundaryXStart+laneW*4+1,
+		},
+	}
 }
