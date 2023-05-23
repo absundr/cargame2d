@@ -55,28 +55,28 @@ func (game *Game) DrawMap() {
 		}
 	}
 
-	game.Props.BoundaryXStart = posX1 - 1
-	game.Props.BoundaryXEnd = endX1
-	game.Props.BoundaryYStart = 0
-	game.Props.BoundaryYEnd = h - 1
+	game.Boundaries.BoundaryXStart = posX1 - 1
+	game.Boundaries.BoundaryXEnd = endX1
+	game.Boundaries.BoundaryYStart = 0
+	game.Boundaries.BoundaryYEnd = h - 1
 
-	laneW := (game.Props.BoundaryXEnd-game.Props.BoundaryXStart)/4
+	laneW := (game.Boundaries.BoundaryXEnd-game.Boundaries.BoundaryXStart)/4
 	game.Lanes = [LaneCount]Lane{
 		{
-			StartX: game.Props.BoundaryXStart+2,
-			EndX: game.Props.BoundaryXStart+laneW+1,
+			StartX: game.Boundaries.BoundaryXStart+2,
+			EndX: game.Boundaries.BoundaryXStart+laneW+1,
 		},
 		{
-			StartX: game.Props.BoundaryXStart+laneW+2,
-			EndX: game.Props.BoundaryXStart+laneW*2+1,
+			StartX: game.Boundaries.BoundaryXStart+laneW+2,
+			EndX: game.Boundaries.BoundaryXStart+laneW*2+1,
 		},
 		{
-			StartX: game.Props.BoundaryXStart+laneW*2+2,
-			EndX: game.Props.BoundaryXStart+laneW*3+1,
+			StartX: game.Boundaries.BoundaryXStart+laneW*2+2,
+			EndX: game.Boundaries.BoundaryXStart+laneW*3+1,
 		},
 		{
-			StartX: game.Props.BoundaryXStart+laneW*3+2,
-			EndX: game.Props.BoundaryXStart+laneW*4+1,
+			StartX: game.Boundaries.BoundaryXStart+laneW*3+2,
+			EndX: game.Boundaries.BoundaryXStart+laneW*4+1,
 		},
 	}
 }

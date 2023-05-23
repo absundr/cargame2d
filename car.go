@@ -1,6 +1,10 @@
 package main
 
-import "github.com/gdamore/tcell"
+import (
+	"math/rand"
+
+	"github.com/gdamore/tcell"
+)
 
 type Cell struct {
 	PosX int
@@ -18,18 +22,21 @@ const (
 	carHeight       = 7
 )
 
-func (game *Game) InitCar() {
-	// Make this random
+func (car *Car) InitCar(lanes [LaneCount]Lane, endY int) {
 	lane := 2
 
-	game.UpdateCarPos(lane)
+	car.UpdateCarPos(lanes, endY, lane)
 }
 
-func (game *Game) UpdateCarPos(lane int) {
-	endY := game.Props.BoundaryYEnd
+func (car *Car) InitIncomingCar(lanes [LaneCount]Lane, endY int) {
+	lane := rand.Intn(LaneCount-1)
 
-	carStartX, carStartY := game.Lanes[lane].StartX+laneAdjustmentX, endY-carHeight
-	carEndX, carEndY := game.Lanes[lane].EndX-laneAdjustmentX, endY
+	car.UpdateCarPos(lanes, endY, lane)
+}
+
+func (car *Car) UpdateCarPos(lanes [LaneCount]Lane, endY int, lane int) {
+	carStartX, carStartY := lanes[lane].StartX+laneAdjustmentX, endY-carHeight
+	carEndX, carEndY := lanes[lane].EndX-laneAdjustmentX, endY
 
 	body := make([]Cell, 0)
 	counter := 0
@@ -40,18 +47,16 @@ func (game *Game) UpdateCarPos(lane int) {
 		}
 	}
 
-	game.Car = Car{
-		Body: body,
-		Lane: lane,
-	}
+	car.Body = body
+	car.Lane = lane
 }
 
-func (game *Game) ClearCarPos() {
-	game.DrawCar(game.Styles.Background)
+func (car *Car) ClearCarPos(screen tcell.Screen, style tcell.Style) {
+	car.DrawCar(screen, style)
 }
 
-func (game *Game) DrawCar(style tcell.Style) {
-	for _, cell := range game.Car.Body {
-		game.Screen.SetContent(cell.PosX, cell.PosY, tcell.RuneBlock, nil, style)
+func (car *Car) DrawCar(screen tcell.Screen, style tcell.Style) {
+	for _, cell := range car.Body {
+		screen.SetContent(cell.PosX, cell.PosY, tcell.RuneBlock, nil, style)
 	}
 }
