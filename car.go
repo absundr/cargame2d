@@ -51,6 +51,7 @@ func (car *Car) UpdateCarPos(lanes [LaneCount]Lane, endY int, lane int) {
 	car.Lane = lane
 }
 
+// Drawing over the car
 func (car *Car) ClearCarPos(screen tcell.Screen, style tcell.Style) {
 	car.DrawCar(screen, style)
 }
