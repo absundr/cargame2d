@@ -23,6 +23,7 @@ type Lane struct {
 const (
 	LaneCount int = 4
 )
+
 type Game struct {
 	Screen tcell.Screen
 	Styles Style
@@ -30,6 +31,7 @@ type Game struct {
 	Car Car
 	Lanes [LaneCount]Lane
 	IncomingCars []Car
+	OperationQueue Queue
 }
 
 const (
@@ -40,25 +42,48 @@ func (game *Game) Update() {
 	// Add incoming cars 
 	go func () {
 		for {
-			// for i, c := range game.IncomingCars {
-			// 	Log("Car no: " + strconv.Itoa(i))
-			// 	Log("xStart: " + strconv.Itoa(game.Boundaries.BoundaryXStart))				
-			// 	Log("xEnd: " + strconv.Itoa(game.Boundaries.BoundaryXEnd))				
-			// 	Log("yStart: " + strconv.Itoa(game.Boundaries.BoundaryYStart))				
-			// 	Log("yEnd: " + strconv.Itoa(game.Boundaries.BoundaryYEnd))
-			// 	Log("-----")
-			// 	Log("xCarStart: " + strconv.Itoa(c.Body[0].PosX))				
-			// 	Log("xCarEnd: " + strconv.Itoa(c.Body[len(c.Body)-1].PosX))				
-			// 	Log("yCarStart: " + strconv.Itoa(c.Body[0].PosY))				
-			// 	Log("xCarEnd: " + strconv.Itoa(c.Body[len(c.Body)-1].PosY))				
-			// 	Log("***************************")
-			// }
 			var car Car
 			car.InitIncomingCar(game.Lanes, game.Boundaries.BoundaryYStart)
 			game.IncomingCars = append(game.IncomingCars, car)
 			time.Sleep(time.Duration(rand.Intn(3)) * time.Second)
 		}
 	}()
+
+	// Update incoming car pos
+	go func () {
+		for {
+			// Push the update operation into the queue
+			game.OperationQueue.Enqueue(
+				func () {UpdateIncomingCars(game.IncomingCars)}, "Update")
+			time.Sleep(OneHz*3*time.Millisecond)
+		}
+	} ()
+
+	// Process and execute operations in the queue 
+	go func () {
+		for {
+			if len(game.OperationQueue.q) > 3 {
+				m := make(map[string]func())
+				for i := 0; i < 4; i++ {
+					n, e := game.OperationQueue.Dequeue() 
+					if e == nil {
+						m[n.t] = n.fn
+					}
+				}
+				// Maintains the order in which the operations are executed
+				if m["Draw"] != nil {
+					m["Draw"]()
+				}				
+				if m["Show"] != nil {
+					m["Show"]()
+				}				
+				if m["Clear"] != nil && m["Update"] != nil {
+					m["Clear"]()
+					m["Update"]()
+				}				
+			}
+		}
+	} ()
 
 	// Handle keyboard input
 	for {
@@ -83,29 +108,17 @@ func (game *Game) Update() {
 
 func (game *Game) Draw() {
 	for {
-		// Draw incoming cars
-		for _, car := range game.IncomingCars {
-			car.DrawCar(game.Screen, game.Styles.Foreground)
-		}
+		// Push draw operation into the queue
+		game.OperationQueue.Enqueue(
+			func () {DrawIncomingCars(game.Screen, game.IncomingCars, game.Styles.Foreground)}, "Draw")
 
-		// Display
-		game.Screen.Show()
+		// Push the show operation into the queue
+		game.OperationQueue.Enqueue(
+			func () {game.Screen.Show()}, "Show")
 
-		// Clear incoming cars
-		for i := range game.IncomingCars {
-			game.IncomingCars[i].ClearCarPos(game.Screen, game.Styles.Background)
-		}
-
-		// Update incoming car pos
-		// TODO: 
-		// This is updating the state and technically not drawing anything
-		// Ideally it should exist in the update func 
-		// but running them in parallel isn't working as expected
-		for i := range game.IncomingCars {
-			for j := range game.IncomingCars[i].Body {
-				game.IncomingCars[i].Body[j].PosY++ 
-			}
-		}
+		// Push the clear operation into the queue
+		game.OperationQueue.Enqueue(
+			func () { ClearIncomingCars(game.Screen, game.IncomingCars, game.Styles.Background)}, "Clear")
 
 		time.Sleep(OneHz*3*time.Millisecond)
 	}
@@ -125,6 +138,7 @@ func (game *Game) New() *Game {
 	game.Car = car
 
 	game.IncomingCars = make([]Car, 0)
+	game.OperationQueue = *NewQueue()
 
 	return game
 }
