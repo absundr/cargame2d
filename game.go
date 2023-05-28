@@ -43,12 +43,21 @@ const (
 )
 
 func (game *Game) Update() {
-	// Add incoming cars 
+	// Add and clear incoming cars 
 	go func () {
 		for {
 			if game.GameOver {
 				break
 			}
+
+			// Remove cars no longer on the screen
+			for i := len(game.IncomingCars)-1; i >= 0; i-- {
+				car := game.IncomingCars[i]
+				if (car.Body[0].PosY > game.Boundaries.BoundaryYEnd) {
+					game.IncomingCars = game.IncomingCars[i:]
+					break	
+				}
+			} 
 
 			var car Car
 			car.InitIncomingCar(game.Lanes, game.Boundaries.BoundaryYStart)
@@ -117,6 +126,8 @@ func (game *Game) Update() {
 					game.DrawGameOverScreen()
 				}
 			}
+
+			time.Sleep(threeUnit*time.Millisecond)
 		}
 	} ()
 
