@@ -89,7 +89,7 @@ func (game *Game) Update() {
 	for {
 		switch ev := game.Screen.PollEvent().(type) {
 		case *tcell.EventResize:
-			game.Screen.Sync()
+			game.Sync()
 		case *tcell.EventKey:
 			if ev.Key() == tcell.KeyEscape || ev.Key() == tcell.KeyCtrlC {
 				game.End()
@@ -151,4 +151,16 @@ func (game *Game) Run() {
 func (game *Game) End() {
 	game.Screen.Fini()
 	os.Exit(0)
+}
+
+func (game *Game) Sync() {
+	game.Screen.Sync()
+	game.Screen.Clear()
+	game.OperationQueue = *NewQueue()
+	game.DrawMap()
+	game.Car.UpdateCarPos(game.Lanes, game.Boundaries.BoundaryYEnd, game.Car.Lane)
+	game.Car.DrawCar(game.Screen, game.Styles.Foreground)
+	for i := range game.IncomingCars {
+		game.IncomingCars[i].UpdateCarPos(game.Lanes, game.IncomingCars[i].Body[len(game.IncomingCars[i].Body)-1].PosY, game.IncomingCars[i].Lane)
+	}
 }
