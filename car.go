@@ -29,7 +29,7 @@ func (car *Car) InitCar(lanes [LaneCount]Lane, endY int) {
 }
 
 func (car *Car) InitIncomingCar(lanes [LaneCount]Lane, endY int) {
-	lane := rand.Intn(LaneCount-1)
+	lane := rand.Intn(LaneCount)
 
 	car.UpdateCarPos(lanes, endY, lane)
 }
@@ -60,4 +60,16 @@ func (car *Car) DrawCar(screen tcell.Screen, style tcell.Style) {
 	for _, cell := range car.Body {
 		screen.SetContent(cell.PosX, cell.PosY, tcell.RuneBlock, nil, style)
 	}
+}
+
+func (car *Car) CheckForCollision(incomingCar Car) bool {
+	for _, body := range car.Body {
+		for _, iBody := range incomingCar.Body {
+			if body.PosX == iBody.PosX && body.PosY == iBody.PosY {
+				return true
+			}
+		}
+	}
+
+	return false
 }

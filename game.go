@@ -3,6 +3,7 @@ package main
 import (
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gdamore/tcell"
@@ -32,16 +33,23 @@ type Game struct {
 	Lanes [LaneCount]Lane
 	IncomingCars []Car
 	OperationQueue Queue
+	GameOver bool
 }
 
 const (
-	OneHz = 16
+	oneUnit = 16
+	twoUnit = oneUnit*2
+	threeUnit = oneUnit*3
 )
 
 func (game *Game) Update() {
 	// Add incoming cars 
 	go func () {
 		for {
+			if game.GameOver {
+				break
+			}
+
 			var car Car
 			car.InitIncomingCar(game.Lanes, game.Boundaries.BoundaryYStart)
 			game.IncomingCars = append(game.IncomingCars, car)
@@ -52,16 +60,24 @@ func (game *Game) Update() {
 	// Update incoming car pos
 	go func () {
 		for {
+			if game.GameOver {
+				break
+			}
+
 			// Push the update operation into the queue
 			game.OperationQueue.Enqueue(
 				func () {UpdateIncomingCars(game.IncomingCars)}, "Update")
-			time.Sleep(OneHz*3*time.Millisecond)
+			time.Sleep(threeUnit*time.Millisecond)
 		}
 	} ()
 
 	// Process and execute operations in the queue 
 	go func () {
 		for {
+			if game.GameOver {
+				break
+			}
+
 			if len(game.OperationQueue.q) > 3 {
 				m := make(map[string]func())
 				for i := 0; i < 4; i++ {
@@ -85,6 +101,25 @@ func (game *Game) Update() {
 		}
 	} ()
 
+	// Check for collisions
+	go func() {
+		for {
+			if game.GameOver {
+				break
+			}
+
+			for _, car := range game.IncomingCars {
+				if (car.Lane != game.Car.Lane) {
+					continue;
+				}
+				if game.Car.CheckForCollision(car) {
+					game.GameOver = true
+					game.DrawGameOverScreen()
+				}
+			}
+		}
+	} ()
+
 	// Handle keyboard input
 	for {
 		switch ev := game.Screen.PollEvent().(type) {
@@ -101,13 +136,22 @@ func (game *Game) Update() {
 				game.Car.ClearCarPos(game.Screen, game.Styles.Background)
 				game.Car.UpdateCarPos(game.Lanes, game.Boundaries.BoundaryYEnd, game.Car.Lane-1)
 				game.Car.DrawCar(game.Screen, game.Styles.Foreground)
-			}		
+			} else if game.GameOver && strings.ToLower(string(ev.Rune())) == "y" {
+				game.New().Run()
+			} else if game.GameOver && strings.ToLower(string(ev.Rune())) == "n" {
+				game.End()
+			} 	
 		}
 	}
 }
 
 func (game *Game) Draw() {
 	for {
+		// Check for game over
+		if game.GameOver {
+			break
+		}
+
 		// Push draw operation into the queue
 		game.OperationQueue.Enqueue(
 			func () {DrawIncomingCars(game.Screen, game.IncomingCars, game.Styles.Foreground)}, "Draw")
@@ -120,7 +164,7 @@ func (game *Game) Draw() {
 		game.OperationQueue.Enqueue(
 			func () { ClearIncomingCars(game.Screen, game.IncomingCars, game.Styles.Background)}, "Clear")
 
-		time.Sleep(OneHz*3*time.Millisecond)
+		time.Sleep(threeUnit*time.Millisecond)
 	}
 }
 
@@ -139,6 +183,7 @@ func (game *Game) New() *Game {
 
 	game.IncomingCars = make([]Car, 0)
 	game.OperationQueue = *NewQueue()
+	game.GameOver = false
 
 	return game
 }
@@ -161,6 +206,9 @@ func (game *Game) Sync() {
 	game.Car.UpdateCarPos(game.Lanes, game.Boundaries.BoundaryYEnd, game.Car.Lane)
 	game.Car.DrawCar(game.Screen, game.Styles.Foreground)
 	for i := range game.IncomingCars {
-		game.IncomingCars[i].UpdateCarPos(game.Lanes, game.IncomingCars[i].Body[len(game.IncomingCars[i].Body)-1].PosY, game.IncomingCars[i].Lane)
+		game.IncomingCars[i].UpdateCarPos(
+			game.Lanes,
+			game.IncomingCars[i].Body[len(game.IncomingCars[i].Body)-1].PosY,
+			game.IncomingCars[i].Lane)
 	}
 }

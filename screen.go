@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/gdamore/tcell"
 )
@@ -79,4 +80,22 @@ func (game *Game) DrawMap() {
 			EndX: game.Boundaries.BoundaryXStart+laneW*4+1,
 		},
 	}
+}
+
+func (game *Game) DrawGameOverScreen() {
+	// Wait till all the routines have exited
+	time.Sleep(time.Second)
+	
+	game.Screen.Clear()
+	
+	text := "Game over. Do you want to play again? y/n"
+	w, h := game.Screen.Size()
+
+	wStart := w/2 - len(text)/2
+	for x, i := wStart, 0; i < len(text); i++ {
+		game.Screen.SetContent(x, h/2, rune(text[i]), nil, game.Styles.Foreground)
+		x++
+	}
+
+	game.Screen.Show()
 }
